@@ -50,9 +50,38 @@ class Config
         }
 
         if (isset($local['typo3']['tsconfig'])) {
-            $local = array_replace_recursive($local, \Aimeos\Aimeos\Base::parseTS($local['typo3']['tsconfig']));
+            self::mergeConfigRecursive($local, \Aimeos\Aimeos\Base::parseTS($local['typo3']['tsconfig']));
         }
 
         return new \Aimeos\Base\Config\Decorator\Memory(self::$config, $local);
+    }
+
+    /**
+     * Overwrites configuration recursively, preserving key based order in arrays
+     * 
+     * @param array $conf local configuration as reference
+     * @param array $overwrite Configuration merged into local configuration
+     */
+
+    private static function mergeConfigRecursive(array &$conf, array $overwrite)
+    {
+        if (is_array($overwrite)) {
+            foreach ($overwrite as $key => $value) {
+                if (is_array($value)) {
+                    if(!empty($conf[$key])) {
+                        self::mergeConfigRecursive($conf[$key],$value);
+                    } else {
+                        $conf[$key] = $value;
+                    }
+                } else {
+                    if(!empty($conf[$key])) {
+                        $conf[$key] = $value;
+                    } else {
+                        $conf[$key] = $value;
+                        ksort($conf);
+                    }
+                }
+            }
+        }
     }
 }
